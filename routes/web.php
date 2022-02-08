@@ -38,6 +38,8 @@ Route::group(['middleware' => 'auth'], function () {
 
     Route::get('chat','ChatController@index');
 
+    Route::get('chat/sendmessage/{friend}','ChatMessageController@sendMessage');
+
 
     //--------------------test camera hhhhhh loool---------------
 
@@ -78,7 +80,7 @@ Route::get('test', function () {
 
 
 
-     $user = User::where('email','m@m.com')->first();
+    //  $user = User::where('email','m@m.com')->first();
 
 
 

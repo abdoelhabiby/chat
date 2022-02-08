@@ -20,10 +20,11 @@
     <!-- Styles -->
     <link href="{{ asset('css/app.css') }}" rel="stylesheet">
 
-    <link rel="stylesheet"
-        href="https://maxst.icons8.com/vue-static/landings/line-awesome/line-awesome/1.3.0/css/line-awesome.min.css">
 
-    <style>
+   <link rel="stylesheet" href="{{asset('line-awesome-1.3.0/css/line-awesome.min.css')}}">
+
+
+  <style>
         .number {
             height: 27px;
             width: 27px;
@@ -40,6 +41,9 @@
         }
 
     </style>
+
+<script src="{{asset('js/jquery-3.4.1.min.js')}}" ></script>
+
 
     @yield('style')
 
@@ -171,9 +175,11 @@
         </main>
     </div>
 
-    <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
+    {{-- <script src="https://cdn.jsdelivr.net/npm/jquery@3.5.1/dist/jquery.slim.min.js"
         integrity="sha384-DfXdz2htPH0lsSSs5nCTpuj/zy4C+OGpamoFVy38MVBnE+IbbVYUew+OrCXaRkfj" crossorigin="anonymous">
-    </script>
+    </script> --}}
+
+    {{-- <script src="{{asset('js/jquery-3.4.1.min.js')}}" ></script> --}}
 
 
     @auth

@@ -15,7 +15,7 @@
         <div class="row clearfix">
             <div class="col-lg-12">
                 <div class="card chat-app">
-                    <div id="plist" class="people-list">
+                    <div id="plist" class="people-list" style="    background: white;">
                         <div class="input-group">
                             <div class="input-group-prepend">
                                 <span class="input-group-text"><i class="fa fa-search"></i></span>
@@ -29,7 +29,9 @@
                                 @foreach ($friends as $friend)
 
                                     <li class="clearfix" id="friend_id_{{ $friend->id }}"
-                                        data-friend-id="{{ $friend->id }}">
+                                        data-friend-id="{{ $friend->id }}" data-friend-name="{{ $friend->name }}"
+                                        data-friend-status="{{ $friend->online }}"
+                                        data-friend-last-online="{{ $friend->online == 0 ? \Carbon\Carbon::createFromDate($friend->last_online)->diffForHumans() : '' }}">
                                         <img src="https://bootdey.com/img/Content/avatar/avatar1.png" alt="avatar">
                                         <div class="about">
                                             <div class="name">{{ $friend->name }}</div>
@@ -51,7 +53,7 @@
                             @endif
 
 
-                            <li class="clearfix active">
+                            <li class="clearfix ">
                                 <img src="https://bootdey.com/img/Content/avatar/avatar2.png" alt="avatar">
                                 <div class="about">
                                     <div class="name">Aiden Chavez</div>
@@ -65,16 +67,20 @@
 
                         </ul>
                     </div>
-                    <div class="chat">
+
+
+                    <div class="chat d-none">
                         <div class="chat-header clearfix">
                             <div class="row">
                                 <div class="col-lg-6">
-                                    <a href="javascript:void(0);" data-toggle="modal" data-target="#view_info">
-                                        <img src="https://bootdey.com/img/Content/avatar/avatar2.png" alt="avatar">
-                                    </a>
+                                    <div class="chat-header-image">
+
+                                    </div>
+
+
                                     <div class="chat-about">
-                                        <h6 class="m-b-0">Aiden Chavez</h6>
-                                        <small>Last seen: 2 hours ago</small>
+                                        <h6 class="m-b-0 friend_name"></h6>
+                                        <span class="status"></span>
                                     </div>
                                 </div>
                                 <div class="col-lg-6 hidden-sm text-right">
@@ -89,52 +95,35 @@
                                 </div>
                             </div>
                         </div>
-                        <div class="chat-history">
-                            <ul class="m-b-0">
-                                <li class="clearfix">
-                                    <div class="message-data text-right">
-                                        <span class="message-data-time">10:10 AM, Today</span>
-                                        {{-- <img src="https://bootdey.com/img/Content/avatar/avatar7.png" alt="avatar"> --}}
-                                    </div>
-                                    <div class="message my-message float-right"> Lorem Ipsum is simply dummy text of the
-                                        printing and typesetting industry. Lorem Ipsum has been the industry </div>
 
 
-                                </li>
+
+                        <div class="chat-text" style="max-height: 300px;overflow:auto;min-height:300px">
+
+                            <div class="chat-history">
 
 
 
 
+                                <ul class="m-b-0">
 
-                                <li class="clearfix">
-                                    <div class="message-data ">
-                                        <img src="https://bootdey.com/img/Content/avatar/avatar2.png" alt="avatar">
-                                        <span class="message-data-time">10:10 AM, Today</span>
-
-                                    </div>
-                                    <div class="message other-message "> Lorem Ipsum is simply dummy text of the printing
-                                        and typesetting industry. Lorem Ipsum has been the industry
-                                    </div>
-                                </li>
-
-
-
-
-
-
-
-                            </ul>
-                        </div>
-                        <div class="chat-message clearfix">
-                            <div class="input-group mb-0">
-                                <div class="input-group-prepend">
-                                    <span class="input-group-text">
-                                        <i class="lar la-paper-plane"></i>
-                                    </span>
-                                </div>
-                                <input type="text" class="form-control" placeholder="Enter text here...">
+                                </ul>
                             </div>
+
+
                         </div>
+
+
+
+
+
+                        <div class="chat-message clearfix">
+
+
+
+                        </div>
+                        <div id="target"></div>
+
                     </div>
                 </div>
             </div>
@@ -147,34 +136,130 @@
 
 @section('websocket')
 
+    <script src="{{ asset('js/chat.js') }}"></script>
     <script>
         $(function() {
 
 
 
-                           var channel_name = "chat_room";
 
-                            window.Echo.private(channel_name)
-                            .listen('NewMessageEvent', (user) => {
 
-                                console.log('test again')
+            $(document).on('click', '.chat-list li', function(e) {
+                e.preventDefault();
+
+                $('.chat .chat-text .chat-history ul').empty();
+                var friend_id = $(this).data('friend-id');
+                var image = "https://bootdey.com/img/Content/avatar/avatar2.png";
+                var the_list = this;
+                var api_token = "{{ auth()->user()->api_token }}";
+
+                //will need it multi  hhhhhhhhhhh
+
+                localStorage.setItem('api_token', api_token);
+                localStorage.removeItem('next_page_url');
+                localStorage.removeItem('friend_id');
+
+
+                $(".chat-message").html(' ');
+
+                var url = "/api/chat/conversation/" + friend_id;
+                data = {
+                    "api_token": api_token
+                };
+
+
+                $.ajax({
+                    url,
+                    data,
+                    success: function(data) {
+                        $(document).find('.chat-list li').removeClass('active');
+                        $(the_list).addClass('active');
+
+                        $('.chat').removeClass('d-none');
+                        $('.spinner_').remove();
+
+                        localStorage.setItem('friend_id', data.friend.id);
+
+
+
+                        changeHeaderCaht(data.friend.name, image, data.friend.online, data
+                            .friend.last_online);
+                        var api_token = "{{ auth()->user()->api_token }}";
+                        var url_fetch_message = "/api/chat/fetch_messages/" + friend_id;
+                        fetchChatMessage(friend_id, api_token, url_fetch_message);
+                        var conversation_channel = 'conversation.' + data.conversation_id;
+
+                        var form_url =
+                            `api/chat/conversation/${data.conversation_id}/${data.friend.id}`;
+
+                        appendFormMessage(form_url, api_token);
+                        // scrolled();
+
+
+                        window.Echo.join(conversation_channel)
+                            .listen('NewMessageEvent', (data) => {
+
+                                appendNewMessageFriend(data.text_message, image, data
+                                    .created_at);
 
                             });
 
 
+                            var objDiv = $(document).find('.chat-text');
+                            var h = objDiv.get(0).scrollHeight;
+                            objDiv.animate({scrollTop: h});
 
-            var tet = "{{ auth()->user()->id }}";
 
-            var ChatRoomName = '';
 
-            window.Echo.join('chat')
+
+
+
+
+                    },
+                    error: function(errors) {
+                        console.log(errors);
+                    }
+
+                });
+
+
+
+
+
+
+            });
+
+            $(".chat-text").scroll(function() {
+                var height_scroll = $(this).scrollTop();
+                console.log(height_scroll);
+            });
+
+            function scrolled(e) {
+
+                $('.chat-text').animate({
+                    scrollTop: parseInt($('.chat-history').height())
+                }, 1);
+            }
+
+
+
+
+
+
+            //-------------------------------------------------
+
+            var user_id = "{{ auth()->user()->id }}";
+
+            var ChatRoomName = 'chat';
+
+            window.Echo.join(ChatRoomName)
                 .here((users) => {})
                 .joining((user) => {
                     console.log('joining now : ' + user.name);
                     var url = '/api/chat/user/' + user.id + '/online';
                     data = {
                         api_token: user.api_token,
-                        my: tet
+                        my: user_id
                     };
                     $.ajax({
                         type: "PUT",
@@ -209,7 +294,7 @@
                 })
                 .listen('UserOnlineEvent', (e) => {
 
-                    if (e.user.id != tet) {
+                    if (e.user.id != user_id) {
                         console.log(' UserOnlineEvent : ' + e.user.name);
 
                         var friend_list = $(document).find(".chat-list #friend_id_" + e.user.id);
@@ -225,36 +310,23 @@
 
 
 
-            $(document).on('click', '.chat-list li', function(e) {
-                e.preventDefault();
-                var get_id = $(this).data('friend-id');
-                // ChatRoomName = 'ChatRoom_' + tet + '_' + get_id;
-
-                var url = '/api/chat/user/' + get_id + '/offline';
-                var api_token = '4zFNuMESKYAlbcTEPDdqBINfkjEqQUNqpU9FPCM8mMcQADnnSs';
-                data = {
-                    api_token: api_token,
-                    my: tet
-                };
-                $.ajax({
-                    type: "PUT",
-                    url: url,
-                    data: data,
-                    success: function(su) {
-                        console.log(su);
-                    }
-
-                });
-
-                // ChatRoomName = testCahngeValue('new');
-
-                console.log();
-            });
 
 
-            function testCahngeValue(valuee) {
-                return valuee;
-            };
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
             // --------------------------------------

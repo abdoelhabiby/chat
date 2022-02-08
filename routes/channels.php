@@ -1,6 +1,8 @@
 <?php
 
+use App\User;
 use App\Friend;
+use App\Conversation;
 use Illuminate\Support\Facades\Broadcast;
 
 /*
@@ -34,10 +36,31 @@ Broadcast::channel('chat',function($user){
 
 
 
-Broadcast::channel('chat_room',function($user){
+Broadcast::channel('chat_room.{room}',function($user,Friend $room){
+    if($room->sender_id == $user->id || $room->reciver_id == $user->id){
+        return true;
+    }
 
-      return $user ? true : false;
+    return false;
 });
+
+
+Broadcast::channel('conversation.{conversation}',function($user,Conversation $conversation){
+
+    if($conversation->user_1 == $user->id){
+        return true;
+    }
+
+    if($conversation->user_2 == $user->id ){
+        return true;
+    }
+
+    return false;
+
+});
+
+
+
 
 
 Broadcast::channel('online', function ($user) {

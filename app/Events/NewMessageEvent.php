@@ -2,6 +2,7 @@
 
 namespace App\Events;
 
+use App\Message;
 use App\User;
 use Illuminate\Broadcasting\Channel;
 use Illuminate\Queue\SerializesModels;
@@ -15,16 +16,19 @@ class NewMessageEvent implements ShouldBroadcast
 {
     use Dispatchable, InteractsWithSockets, SerializesModels;
 
-    public $user;
+    public $user, $friend, $conversation,$message;
 
     /**
      * Create a new event instance.
      *
      * @return void
      */
-    public function __construct(User $user)
+    public function __construct(User $user, User $friend, $conversation,Message $message)
     {
         $this->user = $user;
+        $this->friend = $friend;
+        $this->message = $message;
+        $this->conversation = $conversation;
     }
 
     /**
@@ -34,6 +38,18 @@ class NewMessageEvent implements ShouldBroadcast
      */
     public function broadcastOn()
     {
-        return new PrivateChannel('chat_room');
+        // return new PrivateChannel('chat_room.' . $this->conversation_id);
+
+        return new PresenceChannel('conversation.' . $this->conversation->id);
+    }
+
+
+
+    public function broadcastWith()
+    {
+        return [
+            'text_message' => $this->message->text,
+            'created_at' => \Carbon\Carbon::createFromDate($this->message->created_at)->diffForHumans()
+        ];
     }
 }

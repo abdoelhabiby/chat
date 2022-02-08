@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Conversation;
 use App\Friend;
 use App\User;
 use Carbon\Carbon;
@@ -13,51 +14,63 @@ class ChatController extends Controller
     {
 
 
+        $user = auth()->user();
 
 
 
-         $friends_id = $this->getIdsFriends();
+          $conversations = Conversation::where('user_1', $user->id)
+                                       ->orWhere('user_2', $user->id)
+                                       ->select(['id','user_1','user_2'])
+                                       ->get();
 
+            $friends_id = $this->getFriendsIds($conversations,$user);
 
+            $friends_chat = User::whereIn('id',$friends_id)->select([
+                'id','name', 'email','online','last_online'
+            ])->get();
 
+          $friends = $friends_chat;
 
-         $friends = User::select('id','email','name','online','last_online')->whereIn('id',$friends_id )->get();
-         $friends_online = User::select('id','email','name','online','last_online')->whereIn('id',$friends_id )->where('online',true)->get();
-
-         return view('chat.index',compact(['friends','friends_online']));
+         return view('chat.index',compact(['friends']));
     }
 
 
 
-
-
-
-    public function getIdsFriends() :array
-
+    private function filterFriendDetalis(Friend $room_details,User $user)
     {
-        $user = auth()->user();
+        return [
+              "room_id" => $room_details->id,
+              "sender_id" => $room_details->sender_id,
+              "reciver_id" => $room_details->reciver_id,
+              'user_id' => $user->id ,
+              'name' => $user->name ,
+              'email' => $user->email ,
+              'online' => $user->online ,
+              'last_online' => $user->last_online
+        ];
 
-        $friends_id = Friend::select('sender_id', 'reciver_id')
-            ->where('sender_id', $user->id)
-            ->orWhere('reciver_id', $user->id)
-            ->get();
+    }
 
+
+
+    public function getFriendsIds( $conversations,User $user)
+    {
 
         $ids = [];
 
-        foreach ($friends_id as $friend) {
+        foreach ($conversations as $conversation) {
 
-            if ($friend->reciver_id != $user->id) {
-                $ids[] = $friend->reciver_id;
+            if ($conversation->user_1 != $user->id) {
+                $ids[] = $conversation->user_1;
             }
 
-            if ($friend->sender_id != $user->id) {
-                $ids[] = $friend->sender_id;
+            if ($conversation->user_2 != $user->id) {
+                $ids[] = $conversation->user_2;
             }
         }
 
         return  $ids;
-    } // end class get friends ids
+    }
 
 
 
