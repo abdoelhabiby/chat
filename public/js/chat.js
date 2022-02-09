@@ -17,7 +17,6 @@ function fetchChatMessage(friend_id, api_token, url) {
             if (data.chat_messages && data.chat_messages.length > 0) {
 
                 if (data.pagination_details.next_page_url != null) {
-                    console.log(data.pagination_details.next_page_url);
 
                     localStorage.setItem('next_page_url', data.pagination_details.next_page_url);
 
@@ -36,15 +35,20 @@ function fetchChatMessage(friend_id, api_token, url) {
                                         <img src="${friend_image}" alt="avatar">
                                         <span class="message-data-time">${value.created_at}</span>
 
+
                                     </div>
                                     <div class="message other-message "> ${value.text} </div>
                                 </li>`;
                         messages_html = messages_html + li_text;
                     } else {
 
+                        var color_seen_status = value.seen == 1 ? 'green' : '#a6b5b9';
                         var li_text = `  <li class="clearfix ">
                                     <div class="message-data text-right">
+                                    <i class="las la-check-double" style="font-size:19px;color:${color_seen_status};position: relative;
+                                        top: 2px;"></i>
                                         <span class="message-data-time">${value.created_at}</span>
+
 
                                     </div>
                                     <div class="message my-message float-right"> ${value.text} </div>
@@ -65,11 +69,40 @@ function fetchChatMessage(friend_id, api_token, url) {
 
 
 
+
+
+
             }
 
 
 
 
+        },
+        error: function(error) {}
+    });
+
+
+
+
+
+}
+//----------------------------------------
+
+function requestChatMessageMakeSeen(api_token, url) {
+
+    var url = url;
+    data = {
+        "api_token": api_token,
+    };
+
+    $.ajax({
+        type: "PUT",
+        url: url,
+        data: data,
+        success: function(data) {
+            if (data) {
+
+            }
         },
         error: function(error) {
             console.log(error);
@@ -82,19 +115,18 @@ function fetchChatMessage(friend_id, api_token, url) {
 
 }
 //----------------------------------------
+function makeMssagesAsSeen() {
 
-// var scroll = $(document).scrollTop();
-// if (scroll < 1) {
-//     // Store eference to first message
+    // will not fire without this because this is new elements in page witout reload pageeeeee
+    //and search about best for do it...
+    setTimeout(function() {
+        $(document).find('.la-check-double').css('color', 'green');
+    }, 2000);
 
+}
+//----------------------------------------
+//----------------------------------------
 
-//     // Prepend new message here (I'm just cloning...)
-//     $('body').prepend(firstMsg.clone());
-
-//     // After adding new message(s), set scroll to position of
-//     // what was the first message
-//     $(document).scrollTop(firstMsg.offset().top);
-// }
 
 
 
@@ -172,7 +204,11 @@ function changeHeaderCaht(name, image, status = 'online', last_online = null) {
 function appendMyNewMessage(mesage) {
     var li_text = `  <li class="clearfix ">
                         <div class="message-data text-right">
+                        <i class="las la-check-double" style="font-size:19px;color:#a6b5b9;position: relative;
+                                        top: 2px;"></i>
                             <span class="message-data-time">now</span>
+
+
 
                         </div>
                         <div class="message my-message float-right"> ${mesage} </div>
@@ -302,7 +338,7 @@ function sendMessage(message) {
                 $(".text_input").val('');
                 $(".button_send").removeClass('btn btn-primary');
 
-                console.log(data);
+                // console.log(data);
                 appendMyNewMessage(message);
 
             },

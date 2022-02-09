@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use COM;
 use App\User;
 use App\Message;
 use App\Conversation;
@@ -9,8 +10,8 @@ use Illuminate\Http\Request;
 use App\Events\NewMessageEvent;
 use App\Http\Traits\GetFriendsTrait;
 use App\Http\Traits\GetConversationTrait;
-use COM;
 use Illuminate\Support\Facades\Validator;
+use App\Events\ConversationMessagesAsSeenEvent;
 
 class ChatMessageController extends Controller
 {
@@ -20,13 +21,17 @@ class ChatMessageController extends Controller
     public function fetchChatMessages(User $friend)
     {
 
-         $user = auth()->user();
+        $user = auth()->user();
         $conversation = $this->getConversationOrCreate($user, $friend);
 
         $chat_messgaes = Message::where('conversation_id', $conversation->id)
             ->latest()
             ->paginate(5);
 
+        $messages_unread_count = Message::where('conversation_id', $conversation->id)
+            ->where('sender_id', $friend->id)
+            ->where('seen', 0)
+            ->count();
 
         $messages = $chat_messgaes->reverse()->values();
 
@@ -45,7 +50,8 @@ class ChatMessageController extends Controller
             'online' => $friend->online,
             'last_online' => $last_online,
             'chat_messages' => $messages,
-            'pagination_details' => $pagination_details
+            'pagination_details' => $pagination_details,
+            'messages_unread_count' => $messages_unread_count,
         ];
 
 
@@ -144,4 +150,27 @@ class ChatMessageController extends Controller
 
         return response($data);
     }
-}
+
+    //----------------------------------------------------
+
+    public function updateConversationMessagesSeen(Conversation $conversation, User $friend)
+    {
+
+        // return    $messages_unread_count = Message::where('conversation_id', $conversation->id)
+        //     ->where('sender_id', $friend->id)
+        //     ->where('seen', 0)
+        //     ->count();
+
+        $update_conersation_messages_seen_count = Message::where('conversation_id', $conversation->id)
+            ->where('sender_id', $friend->id)
+            ->where('seen', 0)
+            ->update(['seen' => 1]);
+
+        if ($update_conersation_messages_seen_count > 0) {
+
+            broadcast(new ConversationMessagesAsSeenEvent($conversation, $friend))->toOthers();
+
+            return response(['status' => 'success make messages as seen']);
+        }
+    }
+}//end of class

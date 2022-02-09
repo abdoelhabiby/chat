@@ -53,16 +53,6 @@
                             @endif
 
 
-                            <li class="clearfix ">
-                                <img src="https://bootdey.com/img/Content/avatar/avatar2.png" alt="avatar">
-                                <div class="about">
-                                    <div class="name">Aiden Chavez</div>
-                                    <div class="status">
-                                        <i class="las la-circle offline "></i>
-                                        2 hours ago
-                                    </div>
-                                </div>
-                            </li>
 
 
                         </ul>
@@ -193,7 +183,15 @@
                             `api/chat/conversation/${data.conversation_id}/${data.friend.id}`;
 
                         appendFormMessage(form_url, api_token);
-                        // scrolled();
+
+                        //send request to make messages as seen
+
+
+
+
+                        var url_conversation_messages_seen = `api/chat/conversation/${data.conversation_id}/${data.friend.id}/seen`
+                        requestChatMessageMakeSeen(api_token ,url_conversation_messages_seen);
+
 
 
                         window.Echo.join(conversation_channel)
@@ -201,6 +199,11 @@
 
                                 appendNewMessageFriend(data.text_message, image, data
                                     .created_at);
+                                    requestChatMessageMakeSeen(api_token ,url_conversation_messages_seen);
+
+                            }).listen('ConversationMessagesAsSeenEvent', (data) => {
+
+                               makeMssagesAsSeen();
 
                             });
 
@@ -229,17 +232,8 @@
 
             });
 
-            $(".chat-text").scroll(function() {
-                var height_scroll = $(this).scrollTop();
-                console.log(height_scroll);
-            });
 
-            function scrolled(e) {
 
-                $('.chat-text').animate({
-                    scrollTop: parseInt($('.chat-history').height())
-                }, 1);
-            }
 
 
 

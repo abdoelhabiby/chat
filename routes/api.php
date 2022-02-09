@@ -26,6 +26,7 @@ Route::middleware('auth:api')->get('/user', function (Request $request) {
 Route::middleware('auth:api')->get('/chat/fetch_messages/{friend}','ChatMessageController@fetchChatMessages');
 Route::middleware('auth:api')->get('/chat/conversation/{friend}','ChatMessageController@conversation');
 Route::middleware('auth:api')->post('/chat/conversation/{conversation}/{friend}','ChatMessageController@saveMessage');
+Route::middleware('auth:api')->put('/chat/conversation/{conversation}/{friend}/seen','ChatMessageController@updateConversationMessagesSeen');
 
 
 
