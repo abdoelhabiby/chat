@@ -1,10 +1,11 @@
 <?php
 
-use App\Events\NewCommentEvent;
-use App\Events\NewMessageEvent;
-use App\Friend;
 use App\Post;
 use App\User;
+use App\Friend;
+use Illuminate\Http\Request;
+use App\Events\NewCommentEvent;
+use App\Events\NewMessageEvent;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Route;
 
@@ -29,6 +30,28 @@ Auth::routes();
 Route::get('/home', 'HomeController@index')->name('home');
 
 
+Route::get('tset_form_data',function(Request $request){
+
+    // return "test here";
+    return $request->file('audio.wav');
+});
+
+
+Route::post('test_audio_file',function(Request $request){
+
+    //  return dd($request->all());
+
+    $file = request()->file('file');
+    $file_name = rand(10,100000000000000) . "_" . $file->getClientOriginalName();
+    $file->move(public_path('/records'), $file_name);
+    // return "test here";
+
+    $url_link = asset('records/' . $file_name);
+    return response(['url_record' => $url_link]);
+});
+
+
+
 Route::group(['middleware' => 'auth'], function () {
 
     Route::resource('posts', PostController::class, ['except' => ['create']]);
@@ -37,6 +60,8 @@ Route::group(['middleware' => 'auth'], function () {
 
 
     Route::get('chat','ChatController@index');
+
+    Route::get('record','TestController@index');
 
     Route::get('chat/sendmessage/{friend}','ChatMessageController@sendMessage');
 
